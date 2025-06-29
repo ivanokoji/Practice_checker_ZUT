@@ -35,14 +35,15 @@ def check_for_update():
     else:
         prev_hash = ''
 
-    if offer_hash != prev_hash:
+       if offer_hash != prev_hash:
         with open(HASH_FILE, "w") as f:
             f.write(offer_hash)
-        notify_telegram(f"📢 New offer on ZUT site:
+        notify_telegram(f"""📢 New offer on ZUT site:
 {latest}
 
-🔗 {URL}")
+🔗 {URL}""")
     else:
         notify_telegram("🔁 No change today on the ZUT practice page.")
+
 
 check_for_update()
