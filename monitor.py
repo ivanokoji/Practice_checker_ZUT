@@ -27,6 +27,7 @@ def check_for_update():
     if not latest:
         notify_telegram("⚠️ Could not read offer from ZUT site.")
         return
+
     offer_hash = hashlib.sha256(latest.encode()).hexdigest()
 
     if os.path.exists(HASH_FILE):
@@ -35,7 +36,7 @@ def check_for_update():
     else:
         prev_hash = ''
 
-       if offer_hash != prev_hash:
+    if offer_hash != prev_hash:
         with open(HASH_FILE, "w") as f:
             f.write(offer_hash)
         notify_telegram(f"""📢 New offer on ZUT site:
@@ -44,6 +45,5 @@ def check_for_update():
 🔗 {URL}""")
     else:
         notify_telegram("🔁 No change today on the ZUT practice page.")
-
 
 check_for_update()
