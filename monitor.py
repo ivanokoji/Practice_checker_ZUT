@@ -14,7 +14,7 @@ CHAT_ID = os.getenv("CHAT_ID")
 def get_latest_offer():
     res = requests.get(URL)
     soup = BeautifulSoup(res.text, "html.parser")
-    item = soup.find("div", class_="catItemHeader")
+    item = soup.find("div", id="main-content")
     return item.get_text(strip=True) if item else None
 
 def notify_telegram(message):
