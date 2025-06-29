@@ -4,6 +4,14 @@ from bs4 import BeautifulSoup
 import hashlib
 import os
 from dotenv import load_dotenv
+import logging
+import sys
+
+logging.basicConfig(
+    level=logging.INFO,
+    stream=sys.stdout,  # 👈 explicitly sends logs to stdout
+    format="%(levelname)s: %(message)s"
+)
 
 load_dotenv()
 
@@ -24,6 +32,7 @@ def notify_telegram(message):
     requests.post(api, data=data)
 
 def check_for_update():
+    logging.info(f"Start!")
     latest = get_latest_offer()
     if not latest:
         notify_telegram("⚠️ Could not read offer from ZUT site.")
