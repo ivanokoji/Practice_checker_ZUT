@@ -60,7 +60,7 @@ def check_for_update():
             with open(HASH_FILE, "w") as f:
                 f.write(offer_hash)
             notify_telegram(f"""📢 New offer on ZUT site:
-{latest}
+
 
 🔗 {URL}""")
         except Exception as e:
