@@ -24,7 +24,6 @@ def get_latest_offer():
     res = requests.get(URL)
     soup = BeautifulSoup(res.text, "html.parser")
     item = soup.find("div", id="main-content")
-    logging.info(f"🟡 Extracted HTML element: {item}")
     return item.get_text(strip=True) if item else None
 
 
@@ -55,6 +54,7 @@ def check_for_update():
     else:
         prev_hash = ''
 
+    logging.info(f"Prev_hash: {prev_hash}, {offer_hash}")
     if offer_hash != prev_hash:
         try:
             with open(HASH_FILE, "w") as f:
@@ -64,7 +64,7 @@ def check_for_update():
 
 🔗 {URL}""")
         except Exception as e:
-            logging.error("❌ Failed to write hash file: %s", e)
+            logging.info("❌ Failed to write hash file: %s", e)
     else:
         notify_telegram("🔁 No change today on the ZUT practice page.")
 
