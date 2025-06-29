@@ -24,6 +24,7 @@ def get_latest_offer():
     res = requests.get(URL)
     soup = BeautifulSoup(res.text, "html.parser")
     item = soup.find("div", id="main-content")
+    logging.info(f"Start,{item}!")
     return item.get_text(strip=True) if item else None
 
 def notify_telegram(message):
@@ -34,6 +35,7 @@ def notify_telegram(message):
 def check_for_update():
     logging.info(f"Start!")
     latest = get_latest_offer()
+    logging.info(f"Start,{latest}!")
     if not latest:
         notify_telegram("⚠️ Could not read offer from ZUT site.")
         return
@@ -45,7 +47,8 @@ def check_for_update():
             prev_hash = f.read()
     else:
         prev_hash = ''
-
+        
+    logging.info(f"Start,{prev_hash}!")
     if offer_hash != prev_hash:
         with open(HASH_FILE, "w") as f:
             f.write(offer_hash)
