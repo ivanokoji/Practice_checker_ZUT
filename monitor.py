@@ -74,7 +74,7 @@ def check_for_update():
             logging.error(f"❌ Failed to write hash file: {e}")
     else:
         logging.info("✅ No new offers detected.")
-        notify_telegram("✅ No new offers today on the ZUT practice page.")
+       
 
 
 check_for_update()
