@@ -20,44 +20,41 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 
-def get_latest_offer():
+def get_latest_offers(limit=3):
     res = requests.get(URL)
     soup = BeautifulSoup(res.text, "html.parser")
-    container = soup.select_one("div.items-leading")
-    if not container:
-        logging.warning("No 'items-leading' div found.")
-        return None
+    offer_tags = soup.select("div.items-leading h2 > a")
+    if not offer_tags:
+        logging.warning("⚠️ Could not locate offers on the page.")
+        return []
 
-    title_tag = container.select_one("h2 > a")
-    if not title_tag:
-        logging.warning("No offer link found inside 'items-leading'.")
-        return None
-
-    title = title_tag.get_text(strip=True)
-    link = f"https://www.wi.zut.edu.pl{title_tag['href']}"
-    return f"{title}\n{link}"
+    offers = []
+    for tag in offer_tags[:limit]:
+        title = tag.get_text(strip=True)
+        link = f"https://www.wi.zut.edu.pl{tag['href']}"
+        offers.append(f"{title} | {link}")
+    return offers
 
 
 def notify_telegram(message):
     if not TELEGRAM_TOKEN or not CHAT_ID:
         logging.error("❌ Missing TELEGRAM_TOKEN or CHAT_ID")
         return
-
     api = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    data = {"chat_id": CHAT_ID, "text": message}
+    data = {"chat_id": CHAT_ID, "text": message[:4000]}
     res = requests.post(api, data=data)
     logging.info(f"📤 Telegram response: {res.status_code}, {res.text}")
 
 
 def check_for_update():
     logging.info("🚀 Checking for updates...")
-    latest = get_latest_offer()
-
-    if not latest:
-        notify_telegram("⚠️ Could not read offer from ZUT site.")
+    offers = get_latest_offers()
+    if not offers:
+        notify_telegram("⚠️ Could not read offers from ZUT site.")
         return
 
-    offer_hash = hashlib.sha256(latest.encode()).hexdigest()
+    combined = "\n".join(offers)
+    offer_hash = hashlib.sha256(combined.encode()).hexdigest()
 
     if os.path.exists(HASH_FILE):
         with open(HASH_FILE, "r") as f:
@@ -72,11 +69,12 @@ def check_for_update():
         try:
             with open(HASH_FILE, "w") as f:
                 f.write(offer_hash)
-            notify_telegram(f"📢 Detected change in ZUT page content:\n\n{latest}")
+            notify_telegram("📢 New internship/practice offers detected on ZUT page:\n\n" + combined)
         except Exception as e:
             logging.error(f"❌ Failed to write hash file: {e}")
     else:
-        notify_telegram("🔁 No change today on the ZUT practice page.")
+        logging.info("✅ No new offers detected.")
+        notify_telegram("✅ No new offers today on the ZUT practice page.")
 
 
 check_for_update()
