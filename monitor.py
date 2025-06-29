@@ -16,20 +16,26 @@ load_dotenv()
 
 URL = "https://www.wi.zut.edu.pl/pl/dla-studenta/sprawy-studenckie/oferty-pracy-i-praktyk?limitstart=0"
 HASH_FILE = "last_hash.txt"
-PREV_HASH_FILE = "prev_hash.txt"
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 
-def get_page_content():
-    try:
-        res = requests.get(URL, timeout=10)
-        soup = BeautifulSoup(res.text, "html.parser")
-        item = soup.find("div", id="main-content")
-        return item.get_text(strip=True) if item else None
-    except Exception as e:
-        logging.error(f"❌ Error fetching page: {e}")
+def get_latest_offer():
+    res = requests.get(URL)
+    soup = BeautifulSoup(res.text, "html.parser")
+    container = soup.select_one("div.items-leading")
+    if not container:
+        logging.warning("No 'items-leading' div found.")
         return None
+
+    title_tag = container.select_one("h2 > a")
+    if not title_tag:
+        logging.warning("No offer link found inside 'items-leading'.")
+        return None
+
+    title = title_tag.get_text(strip=True)
+    link = f"https://www.wi.zut.edu.pl{title_tag['href']}"
+    return f"{title}\n{link}"
 
 
 def notify_telegram(message):
@@ -45,39 +51,30 @@ def notify_telegram(message):
 
 def check_for_update():
     logging.info("🚀 Checking for updates...")
-    content = get_page_content()
+    latest = get_latest_offer()
 
-    if not content:
+    if not latest:
         notify_telegram("⚠️ Could not read offer from ZUT site.")
         return
 
-    current_hash = hashlib.sha256(content.encode()).hexdigest()
-    previous_hash = ""
+    offer_hash = hashlib.sha256(latest.encode()).hexdigest()
 
     if os.path.exists(HASH_FILE):
         with open(HASH_FILE, "r") as f:
-            previous_hash = f.read().strip()
+            prev_hash = f.read().strip()
+    else:
+        prev_hash = ''
 
-    logging.info(f"🔁 Previous hash: {previous_hash}")
-    logging.info(f"🆕 Current hash:  {current_hash}")
+    logging.info(f"🔁 Previous hash: {prev_hash}")
+    logging.info(f"🆕 Current hash:  {offer_hash}")
 
-    if current_hash != previous_hash:
+    if offer_hash != prev_hash:
         try:
-            # Save previous to backup file
-            if previous_hash:
-                with open(PREV_HASH_FILE, "w") as f:
-                    f.write(previous_hash)
-
-            # Write new hash
             with open(HASH_FILE, "w") as f:
-                f.write(current_hash)
-
-            notify_telegram(f"""📢 Detected change in ZUT page content.
-
-🔗 {URL}""")
-
+                f.write(offer_hash)
+            notify_telegram(f"📢 Detected change in ZUT page content:\n\n{latest}")
         except Exception as e:
-            logging.error("❌ Failed to write hash files: %s", e)
+            logging.error(f"❌ Failed to write hash file: {e}")
     else:
         notify_telegram("🔁 No change today on the ZUT practice page.")
 
