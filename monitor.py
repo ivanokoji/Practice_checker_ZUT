@@ -50,13 +50,17 @@ def check_for_update():
         
     logging.info(f"Start,{prev_hash}!")
     if offer_hash != prev_hash:
+    try:
         with open(HASH_FILE, "w") as f:
             f.write(offer_hash)
+    except Exception as e:
+        logging.error("Failed to write to hash file: %s", e)
+    else:
         notify_telegram(f"""📢 New offer on ZUT site:
 {latest}
 
 🔗 {URL}""")
-    else:
-        notify_telegram("🔁 No change today on the ZUT practice page.")
-
+else:
+    notify_telegram("🔁 No change today on the ZUT practice page.")
+    
 check_for_update()
