@@ -16,5 +16,5 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python monitor.py
         env:
-          TELEGRAM_TOKEN: ${{ secrets.7800506938:AAEm8T5l9Po07tRgfiAWTkmDsVD2WCBwIIE }}
+          TELEGRAM_TOKEN: ${{ secrets.7800506938 }}
           CHAT_ID: ${{ secrets.656981393 }}
