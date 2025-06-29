@@ -2,7 +2,7 @@ name: Daily ZUT Practice Checker
 
 on:
   schedule:
-    - cron: '0 7 * * *'  # Every day at 07:00 UTC (09:00 PL)
+    - cron: '0 * * * *'  # Every hour
   workflow_dispatch:
 
 jobs:
